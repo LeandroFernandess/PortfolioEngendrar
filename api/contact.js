@@ -37,7 +37,7 @@ const PHONE_MAX = 11;
 /**
  * Formata um telefone de 10 ou 11 dígitos para exibição no e-mail,
  * reproduzindo a máscara exibida no front (máscara final 11 dígitos):
- * 11 dígitos -> (31) 9 9849-9733 | 10 dígitos -> (31) 9849-9733.
+ * 11 dígitos -> (31) 9 1234-1234 | 10 dígitos -> (31) 1234-1234.
  * Originalmente definida em `assets/js/utils/mask.js` (formatPhoneForDisplay);
  * replicada aqui porque o endpoint é CommonJS e a máscara do front é ESM.
  * @param {string} digits Apenas dígitos.
@@ -151,7 +151,7 @@ async function readBody(req) {
  * Constrói o HTML do e-mail com os dados do contato.
  * Não contém nenhum atributo style= inline — toda a estilização vem das
  * classes definidas em assets/css/email.css, injetadas aqui via <style>.
- * O telefone já vem formatado (ex.: (31) 9 9849-9733).
+ * O telefone já vem formatado (ex.: (31) 9 1234-1234).
  * @param {object} data Dados formatados (telefone já em formato de exibição).
  * @returns {string} HTML do e-mail.
  */
@@ -240,7 +240,7 @@ module.exports = async function handler(req, res) {
     }
     if (phone.length < PHONE_MIN || phone.length > PHONE_MAX) {
       return json(res, 400, {
-        error: "Telefone inválido. Use o formato (31) 9 9849-9733.",
+        error: "Telefone inválido. Use o formato (31) 9 1234-1234.",
       });
     }
     if (
