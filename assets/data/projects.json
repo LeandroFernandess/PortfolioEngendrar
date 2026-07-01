@@ -1,0 +1,85 @@
+[
+  {
+    "id": 1,
+    "title": "Garfo Paleteiro",
+    "summary": "Implemento para movimentação segura de cargas paletizadas em ambiente industrial.",
+    "technical": "Estrutura dimensionada para acoplamento a sistemas de elevação, com foco em resistência, estabilidade de carga, facilidade de fabricação e compatibilidade operacional.",
+    "solves": "Reduz transporte manual, improvisações em movimentação de materiais e riscos de acidentes, aumentando produtividade e segurança no manuseio de cargas.",
+    "description": "O garfo paleteiro foi projetado para operações de movimentação e elevação de cargas paletizadas, proporcionando maior segurança, estabilidade e eficiência no manuseio de materiais. O equipamento resolve problemas relacionados ao transporte manual e ao uso de soluções improvisadas, reduzindo riscos de acidentes e aumentando a produtividade operacional. Seu projeto prioriza resistência estrutural, facilidade de fabricação e compatibilidade com diferentes sistemas de elevação.",
+    "model": "assets/imgs/glb/GARFO.glb",
+    "images": [
+      "assets/imgs/projects/Garfo1.jpeg",
+      "assets/imgs/projects/Garfo2.jpeg"
+    ]
+  },
+  {
+    "id": 2,
+    "title": "Skid de Bomba Centrífuga",
+    "summary": "Base compacta para bomba centrífuga com alinhamento e manutenção facilitados.",
+    "technical": "Skid estrutural para centralizar bomba, motor e conexões, priorizando alinhamento entre bomba e sucção, inspeção acessível e montagem compacta.",
+    "solves": "Ajuda a reduzir cavitação, falhas por desalinhamento, tempo de instalação e custos de manutenção, melhorando confiabilidade hidráulica.",
+    "description": "O skid de bomba centrífuga foi desenvolvido com foco em garantir o correto alinhamento entre a bomba e a linha de sucção, reduzindo significativamente o risco de cavitação e falhas operacionais. Esse alinhamento preciso melhora a eficiência hidráulica do sistema e aumenta a vida útil dos equipamentos. Além disso, o skid facilita a instalação, inspeção e manutenção, centralizando os componentes em uma estrutura compacta e funcional, reduzindo tempo de parada e custos operacionais.",
+    "images": [
+      "assets/imgs/projects/SkidDeBomba1.jpeg",
+      "assets/imgs/projects/SkidDeBomba2.jpeg",
+      "assets/imgs/projects/SkidDeBomba3.jpeg",
+      "assets/imgs/projects/SkidDeBomba4.jpeg"
+    ]
+  },
+  {
+    "id": 3,
+    "title": "Trocador de Calor Casco e Tubo",
+    "summary": "Equipamento para troca térmica eficiente entre fluidos em processos industriais.",
+    "technical": "Concepção casco e tubo voltada para transferência de calor, robustez operacional, manutenção facilitada e desempenho térmico otimizado.",
+    "solves": "Atende demandas de controle térmico contínuo, aumentando eficiência na troca de calor e estabilidade em sistemas industriais de alta exigência.",
+    "description": "O trocador de calor casco e tubo foi projetado para promover a troca térmica eficiente entre dois fluidos em diferentes temperaturas, sendo amplamente aplicado em processos industriais contínuos. O equipamento resolve a necessidade de controle térmico em sistemas de alta demanda, proporcionando maior eficiência na transferência de calor e robustez operacional. Sua concepção considera facilidade de manutenção, durabilidade e desempenho térmico otimizado.",
+    "model": "assets/imgs/glb/TROCADOR_DE_CALOR.glb",
+    "images": [
+      "assets/imgs/projects/TrocadorDeCalor1.jpeg",
+      "assets/imgs/projects/TrocadorDeCalor2.jpeg",
+      "assets/imgs/projects/TrocadorDeCalor3.jpeg",
+      "assets/imgs/projects/TrocadorDeCalor4.jpeg",
+      "assets/imgs/projects/TrocadorDeCalor5.jpeg"
+    ]
+  },
+  {
+    "id": 4,
+    "title": "Termorregulador de Processos Industriais",
+    "summary": "Sistema para manter fluidos industriais em temperatura estável e controlada.",
+    "technical": "Projeto voltado ao controle de temperatura de fluidos de processo, com foco em repetibilidade operacional, eficiência energética e confiabilidade.",
+    "solves": "Reduz variações térmicas que afetam produtividade e qualidade final, ajudando a manter condições de processo mais previsíveis.",
+    "description": "O termorregulador desenvolvido tem como função principal manter a temperatura de fluidos de processos industriais de forma estável e controlada, garantindo maior confiabilidade operacional. Sua aplicação resolve problemas comuns como variações térmicas que podem comprometer a eficiência de sistemas produtivos e a qualidade do produto final. O sistema foi pensado para melhorar a eficiência energética do processo e aumentar a repetibilidade das condições operacionais.",
+    "model": "assets/imgs/glb/TERMO_REGULADOR.glb",
+    "images": [
+      "assets/imgs/projects/TermoRegulador1.jpeg",
+      "assets/imgs/projects/TermoRegulador2.jpeg",
+      "assets/imgs/projects/TermoRegulador3.jpeg",
+      "assets/imgs/projects/TermoRegulador4.jpeg"
+    ]
+  },
+  {
+    "id": 5,
+    "title": "Pórtico de Elevação",
+    "summary": "Estrutura para movimentação e elevação segura de componentes pesados.",
+    "technical": "Pórtico estrutural pensado para estabilidade de carga, fabricação e montagem viáveis, manutenção simplificada e operação industrial segura.",
+    "solves": "Diminui esforço operacional, riscos ergonômicos e instabilidade na movimentação de cargas, aumentando precisão e segurança no içamento.",
+    "description": "O pórtico de elevação foi projetado para otimizar operações de movimentação de cargas em ambiente industrial, oferecendo maior segurança, precisão e eficiência no manuseio de componentes pesados. O projeto busca reduzir esforços operacionais e riscos ergonômicos, garantindo maior estabilidade durante o levantamento e deslocamento de cargas. Além disso, sua estrutura foi concebida para facilitar a fabricação, montagem e manutenção, priorizando robustez e custo-benefício.",
+    "model": "assets/imgs/glb/CRANE.glb",
+    "images": [
+      "assets/imgs/projects/crane1.jpeg",
+      "assets/imgs/projects/crane2.jpeg",
+      "assets/imgs/projects/crane3.jpeg",
+      "assets/imgs/projects/crane4.jpeg"
+    ]
+  },
+  {
+    "id": 6,
+    "title": "Mesa Modular de Soldagem",
+    "summary": "Mesa desenvolvida para aumentar a precisão, produtividade e organização no processo de fabricação.",
+    "technical": "Seu sistema modular permite fixações rápidas e repetíveis, reduzindo tempo de setup e retrabalhos durante a montagem e soldagem.",
+    "solves": "Reduz o tempo de preparação das montagens, garante maior precisão dimensional e repetibilidade entre peças, facilita o posicionamento e a fixação durante a soldagem, minimiza retrabalhos causados por desalinhamentos, aumenta a produtividade e a organização do ambiente de fabricação.",
+    "description": "Projeto de uma mesa modular de soldagem desenvolvida para proporcionar maior precisão, organização e repetibilidade durante a fabricação de estruturas metálicas. O sistema utiliza uma superfície perfurada para fixação rápida de dispositivos e componentes, permitindo diferentes configurações de montagem conforme a necessidade do processo.",
+    "model": "assets/imgs/glb/MESA_MODULAR.glb",
+    "images": ["assets/imgs/projects/Mesa1.jpeg"]
+  }
+]

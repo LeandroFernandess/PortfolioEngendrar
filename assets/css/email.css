@@ -1,0 +1,60 @@
+/**
+ * email.css
+ * --------------------------------------------------------------------------
+ * Estilos usados no corpo do e-mail enviado por /api/contact via RESEND.
+ * Mantém toda a estilização do e-mail fora do JS/HTML inline do projeto
+ * (requisito: nenhum CSS inline em JS ou HTML; tudo consolidado em `/assets/css`).
+ * --------------------------------------------------------------------------
+ */
+
+.engendrar-email {
+  font-family: Arial, Helvetica, sans-serif;
+  line-height: 1.6;
+  color: #111827;
+  max-width: 640px;
+  margin: 0 auto;
+  background: #ffffff;
+}
+
+.engendrar-email__title {
+  font-size: 22px;
+  margin: 0 0 16px;
+  color: #111827;
+  font-weight: 700;
+}
+
+.engendrar-email__table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 24px;
+}
+
+.engendrar-email__cell {
+  padding: 10px 12px;
+  border: 1px solid #e5e7eb;
+  vertical-align: top;
+}
+
+.engendrar-email__cell--label {
+  background: #f9fafb;
+  font-weight: bold;
+  width: 120px;
+  white-space: nowrap;
+}
+
+.engendrar-email__section-title {
+  font-size: 16px;
+  margin: 0 0 8px;
+  color: #111827;
+  font-weight: 700;
+}
+
+.engendrar-email__message {
+  white-space: pre-wrap;
+  padding: 16px;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  font-family: inherit;
+  color: #111827;
+}

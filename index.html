@@ -1,0 +1,323 @@
+<!doctype html>
+<html lang="pt-BR" data-theme="light">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- Theme script inline: aplica tema salvo antes do paint para evitar flash (ADR-003) -->
+    <script>
+      (function () {
+        try {
+          var saved = localStorage.getItem("engendrar-theme");
+          if (saved === "light" || saved === "dark") {
+            document.documentElement.setAttribute("data-theme", saved);
+          } else if (
+            window.matchMedia &&
+            window.matchMedia("(prefers-color-scheme: dark)").matches
+          ) {
+            document.documentElement.setAttribute("data-theme", "dark");
+          } else {
+            document.documentElement.setAttribute("data-theme", "light");
+          }
+        } catch (e) {
+          /* localStorage indisponível: mantém padrão light */
+        }
+      })();
+    </script>
+
+    <title>Engendrar — Soluções Mecânicas e Projetos CAD</title>
+    <meta
+      name="description"
+      content="Engendrar — soluções mecânicas, modelagem CAD e detalhamento técnico para fabricação. Portfólio de projetos de Rhenan Ferreira."
+    />
+    <meta name="author" content="Engendrar" />
+
+    <!-- OpenGraph / SEO -->
+    <meta property="og:type" content="website" />
+    <meta
+      property="og:title"
+      content="Engendrar — Soluções Mecânicas e Projetos CAD"
+    />
+    <meta
+      property="og:description"
+      content="Projetos mecânicos para fabricação, estruturas metálicas, dispositivos e soluções sob medida."
+    />
+    <meta property="og:image" content="assets/imgs/logo/engendrar.png" />
+    <meta property="og:locale" content="pt_BR" />
+    <meta name="twitter:card" content="summary_large_image" />
+
+    <link rel="icon" type="image/png" href="assets/imgs/logo/engendrar.png" />
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="assets/css/base.css" />
+    <link rel="stylesheet" href="assets/css/theme.css" />
+    <link rel="stylesheet" href="assets/css/layout.css" />
+    <link rel="stylesheet" href="assets/css/components.css" />
+    <link rel="stylesheet" href="assets/css/hero.css" />
+    <link rel="stylesheet" href="assets/css/cursor.css" />
+
+    <!-- Preconnect aos CDNs (GSAP + Three.js) — ADR-004 -->
+    <link rel="preconnect" href="https://esm.run" crossorigin />
+    <link rel="preconnect" href="https://unpkg.com" crossorigin />
+
+    <!-- Import map para Three.js (resolves bare specifiers 'three' e 'three/addons/') -->
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "https://unpkg.com/three@0.165.0/build/three.module.js",
+          "three/addons/": "https://unpkg.com/three@0.165.0/examples/jsm/"
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Pular para o conteúdo</a>
+
+    <!-- Header / Nav -->
+    <header class="site-header" id="site-header">
+      <div class="container header-inner">
+        <a class="brand" href="#hero" aria-label="Engendrar — início">
+          <span class="brand-name">Engendrar</span>
+        </a>
+
+        <nav class="site-nav" aria-label="Navegação principal">
+          <ul>
+            <li><a href="#sobre">Sobre</a></li>
+            <li><a href="#projetos">Projetos</a></li>
+            <li><a href="#contato">Contato</a></li>
+          </ul>
+        </nav>
+
+        <button
+          class="theme-toggle"
+          id="theme-toggle"
+          type="button"
+          aria-pressed="false"
+          aria-label="Alternar tema claro/escuro"
+          title="Alternar tema"
+        >
+          <svg
+            class="theme-toggle-icon theme-toggle-icon--sun"
+            viewBox="0 0 24 24"
+            width="20"
+            height="20"
+            aria-hidden="true"
+            focusable="false"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <circle cx="12" cy="12" r="4" />
+            <path
+              d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"
+            />
+          </svg>
+          <svg
+            class="theme-toggle-icon theme-toggle-icon--moon"
+            viewBox="0 0 24 24"
+            width="20"
+            height="20"
+            aria-hidden="true"
+            focusable="false"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <main id="main">
+      <!-- HERO: cena 3D com tema de engenharia mecânica (Three.js + GSAP) -->
+      <section id="hero" class="hero" aria-label="Apresentação Engendrar">
+        <canvas id="hero-canvas"></canvas>
+        <div class="hero-overlay">
+          <h1 class="hero-title">ENGENDRAR</h1>
+          <p class="hero-subtitle">Soluções Mecânicas</p>
+          <p class="hero-scroll-hint" aria-hidden="true">
+            Role para explorar ↓
+          </p>
+        </div>
+      </section>
+
+      <!-- SOBRE -->
+      <section
+        id="sobre"
+        class="section about"
+        aria-labelledby="sobre-title"
+        data-reveal
+      >
+        <div class="container">
+          <h2 id="sobre-title" class="section-title">Sobre</h2>
+          <div class="about-content">
+            <p>
+              A <strong>Engendrar</strong> reúne sólida experiência em chão de
+              fábrica e desenvolvimento de soluções voltadas à fabricação,
+              unindo visão prática da produção com modelagem e detalhamento
+              técnico em softwares CAD.
+            </p>
+            <p>Atuamos no desenvolvimento de:</p>
+            <ul class="about-list">
+              <li>Projetos mecânicos para fabricação</li>
+              <li>Estruturas metálicas</li>
+              <li>Dispositivos e suportes industriais</li>
+              <li>Implementos e soluções sob medida</li>
+              <li>Modelagem 3D e detalhamento técnico</li>
+            </ul>
+            <p>
+              Nosso foco é desenvolver projetos funcionais, fabricáveis e
+              alinhados às necessidades reais da operação industrial.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- PROJETOS (renderizado por projects.js) -->
+      <section
+        id="projetos"
+        class="section projects"
+        aria-labelledby="projetos-title"
+        data-reveal
+      >
+        <div class="container">
+          <h2 id="projetos-title" class="section-title">Projetos</h2>
+          <div class="projects-grid" id="projects-grid"></div>
+        </div>
+      </section>
+
+      <!-- CONTATO -->
+      <section
+        id="contato"
+        class="section contact"
+        aria-labelledby="contato-title"
+        data-reveal
+      >
+        <div class="container contact-inner">
+          <h2 id="contato-title" class="section-title">Contato</h2>
+          <p class="contact-lead">
+            Aberto a networking, parcerias e novos desafios. Conte sobre sua
+            necessidade.
+          </p>
+
+          <form id="contact-form" class="contact-form" novalidate>
+            <div class="field">
+              <label for="company"
+                >Empresa / Pessoa física <span class="req">*</span></label
+              >
+              <input
+                type="text"
+                id="company"
+                name="company"
+                maxlength="120"
+                autocomplete="organization"
+                required
+                aria-describedby="company-error"
+              />
+              <span class="field-error" id="company-error" role="alert"></span>
+            </div>
+
+            <div class="field">
+              <label for="phone">Telefone <span class="req">*</span></label>
+              <input
+                type="tel"
+                id="phone"
+                name="phone"
+                inputmode="numeric"
+                placeholder="(31) 9 1234-1234"
+                required
+                aria-describedby="phone-error"
+              />
+              <span class="field-error" id="phone-error" role="alert"></span>
+            </div>
+
+            <div class="field">
+              <label for="email">E-mail <span class="req">*</span></label>
+              <input
+                type="email"
+                id="email"
+                name="email"
+                maxlength="120"
+                autocomplete="email"
+                required
+                aria-describedby="email-error"
+                placeholder=" voce@provedor-valido.com"
+              />
+              <span class="field-error" id="email-error" role="alert"></span>
+            </div>
+
+            <div class="field">
+              <label for="message"
+                >Sua necessidade <span class="req">*</span></label
+              >
+              <textarea
+                id="message"
+                name="message"
+                maxlength="500"
+                rows="5"
+                required
+                aria-describedby="message-counter message-error"
+              ></textarea>
+              <span
+                class="field-counter"
+                id="message-counter"
+                aria-live="polite"
+                >0 / 500</span
+              >
+              <span class="field-error" id="message-error" role="alert"></span>
+            </div>
+
+            <button type="submit" class="btn-primary" id="contact-submit">
+              Enviar mensagem
+            </button>
+            <p
+              class="form-status"
+              id="contact-status"
+              role="status"
+              aria-live="polite"
+            ></p>
+          </form>
+        </div>
+      </section>
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="site-footer">
+      <div class="container footer-inner">
+        <p class="footer-copy">
+          © <span id="footer-year"></span> Engendrar. Todos os direitos
+          reservados.
+        </p>
+        <a
+          class="footer-linkedin"
+          href="https://www.linkedin.com/in/rhenan-ferreira-201b4b148"
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="LinkedIn de Rhenan Ferreira"
+        >
+          <svg
+            class="linkedin-icon"
+            viewBox="0 0 24 24"
+            width="22"
+            height="22"
+            aria-hidden="true"
+            focusable="false"
+          >
+            <path
+              fill="currentColor"
+              d="M20.45 20.45h-3.56v-5.57c0-1.33-.02-3.04-1.85-3.04-1.85 0-2.13 1.45-2.13 2.94v5.67H9.35V9h3.42v1.56h.05c.48-.9 1.64-1.85 3.37-1.85 3.6 0 4.27 2.37 4.27 5.45v6.29zM5.34 7.43a2.07 2.07 0 1 1 0-4.14 2.07 2.07 0 0 1 0 4.14zM7.12 20.45H3.56V9h3.56v11.45zM22.22 0H1.77C.79 0 0 .77 0 1.72v20.56C0 23.23.79 24 1.77 24h20.45c.98 0 1.78-.77 1.78-1.72V1.72C24 .77 23.2 0 22.22 0z"
+            />
+          </svg>
+        </a>
+      </div>
+    </footer>
+
+    <!-- JS modular (ESM). GSAP via CDN (ADR-004) -->
+    <script type="module" src="assets/js/main.js"></script>
+  </body>
+</html>
