@@ -1,3 +1,18 @@
-.vercel
-vercel.json
+# Dependencies
+node_modules/
+
+# Environment
 .env
+
+# Vercel
+.vercel/
+
+# Playwright MCP
+.playwright-mcp/
+
+# Temporary
+INSTRUCTIONS.md
+opencode.jsonc
+docs/
+.ai/
+AGENTS.md

@@ -3,8 +3,6 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
-    <!-- Theme script inline: aplica tema salvo antes do paint para evitar flash (ADR-003) -->
     <script>
       (function () {
         try {
@@ -47,6 +45,13 @@
     <meta name="twitter:card" content="summary_large_image" />
 
     <link rel="icon" type="image/png" href="assets/imgs/logo/engendrar.png" />
+
+    <link
+      rel="preload"
+      as="image"
+      href="assets/imgs/logo/engendrar.png"
+      fetchpriority="high"
+    />
 
     <!-- CSS -->
     <link rel="stylesheet" href="assets/css/base.css" />

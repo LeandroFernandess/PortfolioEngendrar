@@ -9,25 +9,31 @@
  * Cria e inicializa um visualizador 3D para um modelo .glb.
  * @param {HTMLElement} container Elemento contêiner onde o canvas será anexado.
  * @param {string} modelUrl URL do arquivo .glb a carregar.
- * @returns {Promise<void>}
+ * @returns {Promise<{dispose: Function, pause: Function, resume: Function}>}
  */
 export async function initViewer3D(container, modelUrl) {
   const reduceMotion = window.matchMedia(
     "(prefers-reduced-motion: reduce)",
   ).matches;
 
-  let THREE, GLTFLoader, OrbitControls;
+  let THREE, GLTFLoader, OrbitControls, DRACOLoader;
   try {
     THREE = await import("three");
     GLTFLoader = (await import("three/addons/loaders/GLTFLoader.js"))
       .GLTFLoader;
     OrbitControls = (await import("three/addons/controls/OrbitControls.js"))
       .OrbitControls;
+    DRACOLoader = (await import("three/addons/loaders/DRACOLoader.js"))
+      .DRACOLoader;
   } catch (err) {
     console.error("[viewer3d] Falha ao importar Three.js:", err);
     showFallback(container);
-    return;
+    return createNoopViewer();
   }
+
+  let disposed = false;
+  let rafId = 0;
+  let isVisible = true;
 
   const width = container.clientWidth || 320;
   const height = container.clientHeight || 200;
@@ -39,11 +45,14 @@ export async function initViewer3D(container, modelUrl) {
   camera.position.set(0, 0, 5);
 
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  const isCoarsePointer = window.matchMedia("(pointer: coarse)").matches;
+  const pixelRatioCap = isCoarsePointer ? 1.25 : 1.75;
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, pixelRatioCap));
   renderer.setSize(width, height);
   renderer.domElement.style.width = "100%";
   renderer.domElement.style.height = "100%";
   container.appendChild(renderer.domElement);
+  container.querySelector(".project-viewer-loading")?.remove();
 
   const hemi = new THREE.HemisphereLight(0xffffff, 0x444466, 2.2);
   scene.add(hemi);
@@ -66,9 +75,18 @@ export async function initViewer3D(container, modelUrl) {
   controls.maxDistance = 10;
 
   const loader = new GLTFLoader();
+  if (DRACOLoader) {
+    const dracoLoader = new DRACOLoader();
+    dracoLoader.setDecoderPath("https://www.gstatic.com/draco/v1/decoders/");
+    loader.setDRACOLoader(dracoLoader);
+  }
   loader.load(
     modelUrl,
     (gltf) => {
+      if (disposed) {
+        disposeObject(gltf.scene);
+        return;
+      }
       const model = gltf.scene;
       const box = new THREE.Box3().setFromObject(model);
       const size = box.getSize(new THREE.Vector3());
@@ -82,17 +100,26 @@ export async function initViewer3D(container, modelUrl) {
     (progress) => {
       if (progress.total) {
         const pct = Math.round((progress.loaded / progress.total) * 100);
+        const loading = container.querySelector(".project-viewer-loading");
+        if (loading) {
+          loading.textContent = `Carregando modelo 3D... ${pct}%`;
+        }
       }
     },
     (err) => {
+      if (disposed) return;
       console.error("[viewer3d] Falha ao carregar modelo .glb:", err);
       showFallback(container);
     },
   );
 
-  const clock = new THREE.Clock();
+  /**
+   * Anima o loop de renderização.
+   * @returns {void}
+   */
   function animate() {
-    requestAnimationFrame(animate);
+    rafId = requestAnimationFrame(animate);
+    if (disposed || !isVisible) return;
     controls.update();
     renderer.render(scene, camera);
   }
@@ -106,6 +133,41 @@ export async function initViewer3D(container, modelUrl) {
     renderer.setSize(w, h);
   });
   ro.observe(container);
+
+  const io = new IntersectionObserver(
+    (entries) => {
+      isVisible = entries[0]?.isIntersecting ?? true;
+    },
+    { threshold: 0.01 },
+  );
+  io.observe(container);
+
+  function pause() {
+    isVisible = false;
+  }
+
+  function resume() {
+    isVisible = true;
+  }
+
+  /**
+   * Disposes of the viewer and its resources.
+   * @returns {void}
+   */
+  function dispose() {
+    if (disposed) return;
+    disposed = true;
+    cancelAnimationFrame(rafId);
+    ro.disconnect();
+    io.disconnect();
+    controls.dispose();
+    disposeObject(scene);
+    renderer.dispose();
+    renderer.forceContextLoss();
+    renderer.domElement.remove();
+  }
+
+  return { dispose, pause, resume };
 }
 
 /**
@@ -118,4 +180,36 @@ function showFallback(container) {
   text.className = "project-no-image";
   text.textContent = "Modelo 3D indisponível";
   container.appendChild(text);
+}
+
+/**
+ * Cria um visualizador 3D que não faz nada (noop).
+ * @returns {void}
+ */
+function createNoopViewer() {
+  return {
+    dispose() {},
+    pause() {},
+    resume() {},
+  };
+}
+
+/**
+ * Disposes of a 3D object and its children.
+ * @param {THREE.Object3D} object The object to dispose.
+ */
+function disposeObject(object) {
+  object.traverse((child) => {
+    if (child.geometry) child.geometry.dispose();
+    if (!child.material) return;
+    const materials = Array.isArray(child.material)
+      ? child.material
+      : [child.material];
+    materials.forEach((material) => {
+      Object.values(material).forEach((value) => {
+        if (value && typeof value.dispose === "function") value.dispose();
+      });
+      material.dispose();
+    });
+  });
 }

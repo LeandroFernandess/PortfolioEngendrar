@@ -1,0 +1,9 @@
+{
+  "name": "portfolio-engendrar",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Performance optimization scripts for PortfólioEngendrar",
+  "devDependencies": {
+    "@gltf-transform/cli": "^4.4.1"
+  }
+}

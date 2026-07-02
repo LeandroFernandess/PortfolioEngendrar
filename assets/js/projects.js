@@ -6,7 +6,6 @@
  */
 
 import { qs, el } from "./utils/dom.js";
-import { initViewer3D } from "./viewer3d.js";
 
 const SHORT_LIMIT = 120;
 
@@ -22,20 +21,18 @@ function truncate(text, limit) {
 }
 
 /**
- * Constrói a mídia do card: viewer 3D (.glb), imagem ou placeholder.
+ * Constrói a mídia do card: imagem leve, indicador 3D ou placeholder.
  * @param {Object} project Projeto a renderizar.
  * @returns {HTMLElement} Nodo do media do card.
  */
 function buildCardMedia(project) {
-  if (project.model) {
-    const wrap = el("div", {
-      class: "project-media project-media-3d",
-      "aria-label": `Modelo 3D de ${project.title}`,
-    });
-    initViewer3D(wrap, project.model);
-    return wrap;
-  }
   if (!project.images || project.images.length === 0) {
+    if (project.model) {
+      return el("div", { class: "project-media project-media-preview" }, [
+        el("div", { class: "project-no-image" }, ["Modelo 3D disponível"]),
+        el("span", { class: "project-3d-badge" }, ["3D"]),
+      ]);
+    }
     return el("div", { class: "project-media no-image" }, [
       el("div", { class: "project-no-image" }, ["Sem imagem"]),
     ]);
@@ -46,7 +43,11 @@ function buildCardMedia(project) {
     loading: "lazy",
     decoding: "async",
   });
-  return el("div", { class: "project-media" }, [main]);
+  const children = [main];
+  if (project.model) {
+    children.push(el("span", { class: "project-3d-badge" }, ["3D"]));
+  }
+  return el("div", { class: "project-media" }, children);
 }
 
 /**
@@ -90,6 +91,30 @@ function buildCard(project) {
 
 let modalEl = null;
 let modalContent = null;
+let activeViewer = null;
+let viewerRequestId = 0;
+
+/**
+ * Cria um visualizador 3D para o projeto, carregando o modelo .glb.
+ * @param {*} container
+ * @param {*} modelUrl
+ * @returns
+ */
+async function createViewer(container, modelUrl) {
+  const { initViewer3D } = await import("./viewer3d.js");
+  return initViewer3D(container, modelUrl);
+}
+
+/**
+ * Disposes of the currently active 3D viewer, if any.
+ * @returns {void}
+ */
+function disposeActiveViewer() {
+  viewerRequestId += 1;
+  if (!activeViewer) return;
+  activeViewer.dispose();
+  activeViewer = null;
+}
 
 /**
  * Garante que o elemento do modal exista no DOM (criado uma única vez).
@@ -147,25 +172,50 @@ function openModal(project) {
   /**
    * Ativa o modo 3D no modal.
    */
-  function show3D() {
+  async function show3D() {
+    disposeActiveViewer();
+    const requestId = viewerRequestId;
     mediaWrap.innerHTML = "";
     galleryWrap.innerHTML = "";
     const viewerWrap = el("div", {
       class: "project-media project-media-3d project-media-3d-lg",
       "aria-label": `Modelo 3D de ${project.title}`,
     });
+    viewerWrap.append(
+      el("div", { class: "project-viewer-loading", role: "status" }, [
+        "Carregando modelo 3D...",
+      ]),
+    );
     mediaWrap.append(viewerWrap);
-    initViewer3D(viewerWrap, project.model);
     tabbar
       .querySelectorAll("button")
       .forEach((b) => b.classList.remove("active"));
     tab3d?.classList.add("active");
+
+    try {
+      const viewer = await createViewer(viewerWrap, project.model);
+      if (
+        requestId !== viewerRequestId ||
+        !modalEl?.classList.contains("open")
+      ) {
+        viewer.dispose();
+        return;
+      }
+      activeViewer = viewer;
+    } catch (err) {
+      console.error("[projects] falha ao iniciar viewer 3D:", err);
+      viewerWrap.innerHTML = "";
+      viewerWrap.append(
+        el("div", { class: "project-no-image" }, ["Modelo 3D indisponível"]),
+      );
+    }
   }
 
   /**
    * Ativa o modo de imagens (fotos) no modal.
    */
   function showImages() {
+    disposeActiveViewer();
     mediaWrap.innerHTML = "";
     galleryWrap.innerHTML = "";
     if (!hasImages) return;
@@ -210,11 +260,9 @@ function openModal(project) {
   let tabImgs = null;
 
   if (hasModel && hasImages) {
-    tab3d = el(
-      "button",
-      { class: "project-modal-tab active", type: "button" },
-      ["Modelo 3D"],
-    );
+    tab3d = el("button", { class: "project-modal-tab", type: "button" }, [
+      "Modelo 3D",
+    ]);
     tab3d.addEventListener("click", show3D);
     tabImgs = el("button", { class: "project-modal-tab", type: "button" }, [
       "Imagens",
@@ -243,10 +291,10 @@ function openModal(project) {
   if (hasModel || hasImages) modalContent.append(tabbar);
   modalContent.append(mediaWrap, galleryWrap, detailSections);
 
-  if (hasModel) {
-    show3D();
-  } else if (hasImages) {
+  if (hasImages) {
     showImages();
+  } else if (hasModel) {
+    show3D();
   }
 
   modalEl.classList.add("open");
@@ -294,6 +342,7 @@ function buildProjectDetails(project) {
  */
 function closeModal() {
   if (!modalEl) return;
+  disposeActiveViewer();
   modalEl.classList.remove("open");
   document.body.style.overflow = "";
   modalContent.innerHTML = "";

@@ -81,6 +81,10 @@ export async function initHero() {
     "(prefers-reduced-motion: reduce)",
   ).matches;
 
+  const isCoarsePointer = window.matchMedia("(pointer: coarse)").matches;
+  const isMobile = isCoarsePointer || window.innerWidth < 768;
+  const perfProfile = isMobile ? "low" : "high";
+
   let THREE;
   try {
     THREE = await import("three");
@@ -99,11 +103,12 @@ export async function initHero() {
 
   const renderer = new THREE.WebGLRenderer({
     canvas,
-    antialias: true,
+    antialias: !isMobile,
     alpha: false,
-    powerPreference: "high-performance",
+    powerPreference: isMobile ? "default" : "high-performance",
   });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  const pixelRatioCap = isCoarsePointer ? 1.25 : 1.75;
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, pixelRatioCap));
   renderer.setSize(canvas.clientWidth, canvas.clientHeight, false);
   renderer.setClearColor(colors.bg, 1);
   renderer.outputColorSpace = THREE.SRGBColorSpace;
@@ -210,6 +215,7 @@ export async function initHero() {
   const hoverTargets = [];
 
   // ───────────────────────────── Engrenagem ─────────────────────────────
+  const segMul = perfProfile === "low" ? 0.5 : 1;
   /**
    * Cria uma engrenagem robusta via ExtrudeGeometry.
    * @param {object} opts Parâmetros de forma.
@@ -280,8 +286,8 @@ export async function initHero() {
       bevelEnabled: true,
       bevelThickness: 0.07,
       bevelSize: 0.05,
-      bevelSegments: 4,
-      curveSegments: 28,
+      bevelSegments: Math.max(2, Math.round(4 * segMul)),
+      curveSegments: Math.max(12, Math.round(28 * segMul)),
     });
     bodyGeom.center();
     bodyGeom.computeVertexNormals();
@@ -293,7 +299,11 @@ export async function initHero() {
     // ── Anel metálico escuro (bushing/colar) ──
     const ringInner = rootRaio * 0.78;
     const ringOuter = rootRaio * 0.96;
-    const ringGeom = new THREE.RingGeometry(ringInner, ringOuter, 96);
+    const ringGeom = new THREE.RingGeometry(
+      ringInner,
+      ringOuter,
+      Math.max(32, Math.round(96 * segMul)),
+    );
     const ringFace = new THREE.Mesh(ringGeom, steelMat);
     ringFace.position.z = depth / 2 + 0.001;
     group.add(ringFace);
@@ -310,7 +320,7 @@ export async function initHero() {
         hubRaio * 1.08,
         hubRaio * 1.08,
         hubExtrude,
-        32,
+        Math.max(16, Math.round(32 * segMul)),
       ),
       hubMat,
     );
@@ -320,7 +330,12 @@ export async function initHero() {
 
     // ── Anel frontal de reforço (aro metálico sobre a face) ──
     const rim = new THREE.Mesh(
-      new THREE.TorusGeometry(rootRaio * 0.86, 0.06, 18, 96),
+      new THREE.TorusGeometry(
+        rootRaio * 0.86,
+        0.06,
+        Math.max(8, Math.round(18 * segMul)),
+        Math.max(32, Math.round(96 * segMul)),
+      ),
       ringMat,
     );
     rim.position.set(0, 0, depth / 2 + 0.04);
@@ -331,7 +346,12 @@ export async function initHero() {
     for (let i = 0; i < 4; i++) {
       const a = (i / 4) * Math.PI * 2 + Math.PI / 4;
       const pin = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.06, 0.06, depth * 1.6, 12),
+        new THREE.CylinderGeometry(
+          0.06,
+          0.06,
+          depth * 1.6,
+          Math.max(6, Math.round(12 * segMul)),
+        ),
         hubMat,
       );
       pin.position.set(
@@ -389,8 +409,8 @@ export async function initHero() {
       bevelEnabled: true,
       bevelThickness: 0.07,
       bevelSize: 0.06,
-      bevelSegments: 5,
-      curveSegments: 12,
+      bevelSegments: Math.max(2, Math.round(5 * segMul)),
+      curveSegments: Math.max(6, Math.round(12 * segMul)),
     });
     geom.center();
     geom.computeVertexNormals();
@@ -412,7 +432,15 @@ export async function initHero() {
     const group = new THREE.Group();
 
     const dome = new THREE.Mesh(
-      new THREE.SphereGeometry(0.98, 44, 32, 0, Math.PI * 2, 0, Math.PI / 1.9),
+      new THREE.SphereGeometry(
+        0.98,
+        Math.max(22, Math.round(44 * segMul)),
+        Math.max(16, Math.round(32 * segMul)),
+        0,
+        Math.PI * 2,
+        0,
+        Math.PI / 1.9,
+      ),
       domeMat,
     );
     dome.castShadow = true;
@@ -420,7 +448,12 @@ export async function initHero() {
     hoverTargets.push(dome);
 
     const bottomRim = new THREE.Mesh(
-      new THREE.TorusGeometry(1.0, 0.04, 12, 64),
+      new THREE.TorusGeometry(
+        1.0,
+        0.04,
+        Math.max(6, Math.round(12 * segMul)),
+        Math.max(32, Math.round(64 * segMul)),
+      ),
       brimMat,
     );
     bottomRim.rotation.x = Math.PI / 2;
@@ -432,7 +465,7 @@ export async function initHero() {
         1.05,
         1.02,
         0.06,
-        56,
+        Math.max(28, Math.round(56 * segMul)),
         1,
         true,
         -Math.PI / 2,
@@ -446,7 +479,12 @@ export async function initHero() {
     hoverTargets.push(brim);
 
     const band = new THREE.Mesh(
-      new THREE.CylinderGeometry(1.0, 1.0, 0.12, 56),
+      new THREE.CylinderGeometry(
+        1.0,
+        1.0,
+        0.12,
+        Math.max(28, Math.round(56 * segMul)),
+      ),
       domeMat,
     );
     band.position.y = 0.2;
@@ -464,7 +502,12 @@ export async function initHero() {
     }
 
     const vent = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.09, 0.09, 0.16, 18),
+      new THREE.CylinderGeometry(
+        0.09,
+        0.09,
+        0.16,
+        Math.max(8, Math.round(18 * segMul)),
+      ),
       brimMat,
     );
     vent.position.y = 0.98;
@@ -505,7 +548,12 @@ export async function initHero() {
     opacity: 0.45,
   });
   const ringA = new THREE.Mesh(
-    new THREE.TorusGeometry(4.3, 0.016, 16, 100),
+    new THREE.TorusGeometry(
+      4.3,
+      0.016,
+      Math.max(8, Math.round(16 * segMul)),
+      Math.max(40, Math.round(100 * segMul)),
+    ),
     ringAMat,
   );
   ringA.rotation.set(Math.PI / 2.2, 0.3, 0);
@@ -519,7 +567,12 @@ export async function initHero() {
     opacity: 0.4,
   });
   const ringB = new THREE.Mesh(
-    new THREE.TorusGeometry(5.3, 0.012, 16, 100),
+    new THREE.TorusGeometry(
+      5.3,
+      0.012,
+      Math.max(8, Math.round(16 * segMul)),
+      Math.max(40, Math.round(100 * segMul)),
+    ),
     ringBMat,
   );
   ringB.rotation.set(-Math.PI / 3, 0.7, 0.3);
@@ -555,7 +608,7 @@ export async function initHero() {
   }
 
   // ───────────────────── Faíscas industriais (não estrelas) ──────────────
-  const sparkCount = 80;
+  const sparkCount = perfProfile === "low" ? 40 : 80;
   const sparkGeom = new THREE.BufferGeometry();
   const sparkPos = new Float32Array(sparkCount * 3);
   const sparkVel = new Float32Array(sparkCount);
@@ -678,9 +731,7 @@ export async function initHero() {
   let gsap = null;
   if (!reduceMotion) {
     try {
-      gsap = await import("https://esm.run/gsap@3.13.0").then(
-        (m) => m.default,
-      );
+      gsap = await import("https://esm.run/gsap@3.13.0").then((m) => m.default);
     } catch (err) {
       console.warn("[hero] GSAP indisponível:", err);
     }
@@ -737,7 +788,7 @@ export async function initHero() {
   let hoverCurrent = 0;
   let pointerInside = false;
 
-  if (!reduceMotion) {
+  if (!reduceMotion && !isCoarsePointer) {
     canvas.addEventListener("pointermove", (e) => {
       ndc.x = (e.clientX / window.innerWidth) * 2 - 1;
       ndc.y = -(e.clientY / window.innerHeight) * 2 + 1;
@@ -795,7 +846,7 @@ export async function initHero() {
       camera.position.z = camBaseZ + Math.sin(t * 0.2) * 0.2;
       camera.lookAt(0, 0, 0);
 
-      if (pointerInside) {
+      if (pointerInside && !isCoarsePointer) {
         raycaster.setFromCamera(ndc, camera);
         const hits = raycaster.intersectObjects(hoverTargets, false);
         hoverTarget = hits.length > 0 ? 1 : 0;

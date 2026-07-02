@@ -75,6 +75,8 @@ export function initCursor() {
   let lastMouseX = targetX;
   let isActive = false;
   let rafId = 0;
+  let inactivityTimer = 0;
+  const INACTIVITY_DELAY = 100; // ms
 
   /**
    * Posiciona o cursor ouvindo mousemove (passivo).
@@ -87,6 +89,8 @@ export function initCursor() {
       isActive = true;
       cursorEl.classList.add("is-active");
     }
+    inactivityTimer = 0;
+    if (rafId === 0) tick();
   }
 
   /**
@@ -112,6 +116,7 @@ export function initCursor() {
   /**
    * Loop de animação: interpola posição e atualiza rotação da engrenagem.
    * Em reduced-motion, posiciona direto sem spin.
+   * Pausa quando o mouse está inativo por INACTIVITY_DELAY ms.
    */
   function tick() {
     rafId = requestAnimationFrame(tick);
@@ -120,10 +125,22 @@ export function initCursor() {
       currentX = targetX;
       currentY = targetY;
     } else {
-      currentX += (targetX - currentX) * 0.2;
-      currentY += (targetY - currentY) * 0.2;
-      const dx = targetX - lastMouseX;
-      rotation += dx * 0.6;
+      const dx = targetX - currentX;
+      const dy = targetY - currentY;
+      if (Math.abs(dx) < 0.05 && Math.abs(dy) < 0.05) {
+        inactivityTimer += 16;
+        if (inactivityTimer > INACTIVITY_DELAY) {
+          cancelAnimationFrame(rafId);
+          rafId = 0;
+          return;
+        }
+      } else {
+        inactivityTimer = 0;
+      }
+      currentX += dx * 0.2;
+      currentY += dy * 0.2;
+      const dMouse = targetX - lastMouseX;
+      rotation += dMouse * 0.6;
       lastMouseX = targetX;
     }
 

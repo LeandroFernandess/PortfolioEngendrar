@@ -56,7 +56,6 @@ img {
   border: 0;
 }
 
-/* Tokens base (valores fixos, não sensíveis ao tema) */
 :root {
   --font-sans: "Helvetica Neue", Arial, sans-serif;
   --font-mono: "Martian Mono", "Courier New", monospace;
@@ -70,6 +69,11 @@ img {
   --maxw: 1120px;
 
   --transition: 0.25s ease;
+}
+
+.section {
+  content-visibility: auto;
+  contain-intrinsic-size: 0 500px;
 }
 
 /* Skip link de acessibilidade */
