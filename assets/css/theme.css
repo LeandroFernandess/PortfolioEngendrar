@@ -1,50 +1,36 @@
-/* theme.css — variáveis de tema light (padrão) e dark (ADR-003) */
+/* theme.css — tokens visuais da home inspirada na referência industrial */
 
-:root,
-[data-theme="light"] {
+:root {
   color-scheme: light;
 
-  --bg: #f5f5f7;
+  --bg: #f3efe9;
   --bg-elev: #ffffff;
-  --bg-soft: #ececef;
-  --fg: #0d120f;
-  --fg-soft: #44464f;
-  --muted: #6e6f76;
-  --border: #d8d8de;
-  --accent: #0a7cff;
-  --on-accent: #ffffff;
-  --danger: #c0322b;
-  --success: #1c7d3b;
-  --overlay: rgba(255, 255, 255, 0.6);
+  --bg-soft: #ece5da;
+  --bg-dark: #11161b;
+  --bg-dark-soft: #1a2026;
+  --fg: #111111;
+  --fg-soft: #46423c;
+  --muted: #726b61;
+  --border: #d8d1c6;
+  --border-strong: rgba(17, 22, 27, 0.12);
+  --accent: #cdb38a;
+  --accent-strong: #b99c73;
+  --on-accent: #171717;
+  --danger: #b6453a;
+  --success: #2e7a47;
+  --overlay: rgba(255, 248, 241, 0.84);
+  --shadow: 0 20px 48px rgba(17, 22, 27, 0.12);
+  --shadow-sm: 0 10px 24px rgba(17, 22, 27, 0.08);
+
+  --hero-text: #f4f4f2;
+  --hero-text-muted: #d3cdc2;
+  --hero-line: rgba(255, 255, 255, 0.2);
+  --hero-button-dark: #0a0a0a;
+  --hero-shadow: rgba(0, 0, 0, 0.28);
+
   --cursor-color: #2a2a30;
-  --cursor-border: #c8a35e;
+  --cursor-border: #cdb38a;
   --cursor-shadow:
-    0 0 0 3px rgba(255, 255, 255, 0.65), 0 0 6px rgba(0, 0, 0, 0.35);
-  --cursor-hub-color: #c8a35e;
-  --hero-overlay-color: #ffffff;
-  --hero-overlay-shadow:
-    0 2px 18px rgba(0, 0, 0, 0.45), 0 0 28px rgba(255, 255, 255, 0.45);
-}
-
-[data-theme="dark"] {
-  color-scheme: dark;
-
-  --bg: #0a0a0f;
-  --bg-elev: #14141c;
-  --bg-soft: #1e1e28;
-  --fg: #f3f3f6;
-  --fg-soft: #c2c4cf;
-  --muted: #8a8c97;
-  --border: #2a2a36;
-  --accent: #4f9dff;
-  --on-accent: #0a0a0f;
-  --danger: #ff6b6b;
-  --success: #5cd98a;
-  --overlay: rgba(0, 0, 0, 0.55);
-  --cursor-color: #e8e8ee;
-  --cursor-border: #5aa6ff;
-  --cursor-shadow: 0 0 6px rgba(90, 166, 255, 0.6);
-  --cursor-hub-color: #5aa6ff;
-  --hero-overlay-color: #ffffff;
-  --hero-overlay-shadow: 0 2px 30px rgba(0, 0, 0, 0.7);
+    0 0 0 3px rgba(255, 255, 255, 0.58), 0 0 6px rgba(0, 0, 0, 0.3);
+  --cursor-hub-color: #cdb38a;
 }

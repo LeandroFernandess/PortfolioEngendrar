@@ -1,19 +1,27 @@
 /**
  * @file projects.js
- * @summary Renderiza os cards de projetos a partir de projects.json.
- *          Cards são clicáveis: abrem um modal com galeria completa e descrição integral.
- *          Projetos com .glb e imagens permitem alternar entre modelo 3D e fotos.
+ * @summary Renderiza os cards de projetos, com preview 3D lazy na grade e modal detalhado.
  */
 
 import { qs, el } from "./utils/dom.js";
 
 const SHORT_LIMIT = 120;
+const CARD_VIEWER_CONCURRENCY = 2;
+
+let modalEl = null;
+let modalContent = null;
+let activeViewer = null;
+let viewerRequestId = 0;
+let cardObserver = null;
+let activeCardLoads = 0;
+const pendingCardLoads = [];
+let isModalOpen = false;
 
 /**
- * Trunca o texto para exibir uma breve descrição no card.
- * @param {string} text Texto completo.
- * @param {number} limit Limite de caracteres.
- * @returns {string} Texto truncado com reticências.
+ * Trunca texto para cards.
+ * @param {string} text
+ * @param {number} limit
+ * @returns {string}
  */
 function truncate(text, limit) {
   if (text.length <= limit) return text;
@@ -21,39 +29,54 @@ function truncate(text, limit) {
 }
 
 /**
- * Constrói a mídia do card: imagem leve, indicador 3D ou placeholder.
- * @param {Object} project Projeto a renderizar.
- * @returns {HTMLElement} Nodo do media do card.
+ * Cria o overlay de loading para cards ou modal.
+ * @param {string} text
+ * @returns {HTMLElement}
  */
-function buildCardMedia(project) {
-  if (!project.images || project.images.length === 0) {
-    if (project.model) {
-      return el("div", { class: "project-media project-media-preview" }, [
-        el("div", { class: "project-no-image" }, ["Modelo 3D disponível"]),
-        el("span", { class: "project-3d-badge" }, ["3D"]),
-      ]);
-    }
-    return el("div", { class: "project-media no-image" }, [
-      el("div", { class: "project-no-image" }, ["Sem imagem"]),
-    ]);
-  }
-  const main = el("img", {
-    src: project.images[0],
-    alt: `Imagem de ${project.title} 1`,
-    loading: "lazy",
-    decoding: "async",
-  });
-  const children = [main];
-  if (project.model) {
-    children.push(el("span", { class: "project-3d-badge" }, ["3D"]));
-  }
-  return el("div", { class: "project-media" }, children);
+function createLoading(text) {
+  return el("div", { class: "project-loading", role: "status" }, [
+    el("div", { class: "project-loading__spinner", "aria-hidden": "true" }),
+    el("div", { class: "project-loading__text" }, [text]),
+  ]);
 }
 
 /**
- * Constrói o card completo de um projeto (breve descrição + botão "Ver detalhes").
- * @param {Object} project Projeto a renderizar.
- * @returns {HTMLElement} Card pronto.
+ * Constrói a mídia do card com preview 3D.
+ * @param {Object} project
+ * @returns {HTMLElement}
+ */
+function buildCardMedia(project) {
+  if (project.model) {
+    const media = el("div", {
+      class: "project-media project-media-card-3d",
+      "data-card-model": project.model,
+      "aria-hidden": "true",
+    });
+    media.append(createLoading("Carregando modelo 3D..."));
+    media.append(el("span", { class: "project-3d-badge" }, ["3D"]));
+    return media;
+  }
+
+  if (project.images && project.images.length > 0) {
+    return el("div", { class: "project-media" }, [
+      el("img", {
+        src: project.images[0],
+        alt: `Imagem de ${project.title} 1`,
+        loading: "lazy",
+        decoding: "async",
+      }),
+    ]);
+  }
+
+  return el("div", { class: "project-media" }, [
+    el("div", { class: "project-no-image" }, ["Sem imagem"]),
+  ]);
+}
+
+/**
+ * Constrói um card de projeto.
+ * @param {Object} project
+ * @returns {HTMLElement}
  */
 function buildCard(project) {
   const summary = project.summary || truncate(project.description, SHORT_LIMIT);
@@ -67,6 +90,7 @@ function buildCard(project) {
       "Ver detalhes →",
     ]),
   ]);
+
   const card = el(
     "article",
     {
@@ -77,6 +101,7 @@ function buildCard(project) {
     },
     [buildCardMedia(project), body],
   );
+
   card.addEventListener("click", () => openModal(project));
   card.addEventListener("keydown", (e) => {
     if (e.key === "Enter" || e.key === " ") {
@@ -87,27 +112,20 @@ function buildCard(project) {
   return card;
 }
 
-// ─── Modal ────────────────────────────────────────────────
-
-let modalEl = null;
-let modalContent = null;
-let activeViewer = null;
-let viewerRequestId = 0;
-
 /**
- * Cria um visualizador 3D para o projeto, carregando o modelo .glb.
- * @param {*} container
- * @param {*} modelUrl
- * @returns
+ * Importa e cria um viewer 3D.
+ * @param {HTMLElement} container
+ * @param {string} modelUrl
+ * @param {object} [options]
+ * @returns {Promise<any>}
  */
-async function createViewer(container, modelUrl) {
+async function createViewer(container, modelUrl, options) {
   const { initViewer3D } = await import("./viewer3d.js");
-  return initViewer3D(container, modelUrl);
+  return initViewer3D(container, modelUrl, options);
 }
 
 /**
- * Disposes of the currently active 3D viewer, if any.
- * @returns {void}
+ * Incrementa o request id e faz dispose do viewer ativo do modal.
  */
 function disposeActiveViewer() {
   viewerRequestId += 1;
@@ -117,8 +135,88 @@ function disposeActiveViewer() {
 }
 
 /**
- * Garante que o elemento do modal exista no DOM (criado uma única vez).
- * @returns {void}
+ * Coloca o carregamento do card na fila.
+ * @param {HTMLElement} mediaEl
+ */
+function enqueueCardViewer(mediaEl) {
+  if (!mediaEl || mediaEl.dataset.viewerStatus) return;
+  mediaEl.dataset.viewerStatus = "queued";
+  pendingCardLoads.push(mediaEl);
+  flushCardQueue();
+}
+
+/**
+ * Processa a fila de viewers dos cards.
+ */
+function flushCardQueue() {
+  while (
+    activeCardLoads < CARD_VIEWER_CONCURRENCY &&
+    pendingCardLoads.length > 0
+  ) {
+    const mediaEl = pendingCardLoads.shift();
+    if (!mediaEl || mediaEl.dataset.viewerStatus === "loaded") continue;
+    activeCardLoads += 1;
+    mediaEl.dataset.viewerStatus = "loading";
+
+    createViewer(mediaEl, mediaEl.dataset.cardModel, {
+      interactive: false,
+      autoRotate: true,
+      fitScale: 2.15,
+    })
+      .then((viewer) => {
+        mediaEl._viewer = viewer;
+        mediaEl.dataset.viewerStatus = "loaded";
+        if (isModalOpen) viewer.pause();
+      })
+      .catch(() => {
+        mediaEl.dataset.viewerStatus = "failed";
+      })
+      .finally(() => {
+        activeCardLoads -= 1;
+        flushCardQueue();
+      });
+  }
+}
+
+/**
+ * Pausa ou retoma todos os viewers passivos da grade.
+ * @param {boolean} pause
+ */
+function setCardViewersPaused(pause) {
+  document.querySelectorAll("[data-card-model]").forEach((node) => {
+    const viewer = node._viewer;
+    if (!viewer) return;
+    if (pause) viewer.pause();
+    else viewer.resume();
+  });
+}
+
+/**
+ * Observa os cards com modelo 3D para carregar apenas quando entram em viewport.
+ * @param {HTMLElement} root
+ */
+function initCardViewers(root) {
+  const mediaNodes = Array.from(root.querySelectorAll("[data-card-model]"));
+  if (mediaNodes.length === 0) return;
+
+  cardObserver?.disconnect();
+  cardObserver = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        if (!entry.isIntersecting) return;
+        const mediaEl = /** @type {HTMLElement} */ (entry.target);
+        enqueueCardViewer(mediaEl);
+        cardObserver.unobserve(mediaEl);
+      });
+    },
+    { rootMargin: "160px 0px", threshold: 0.05 },
+  );
+
+  mediaNodes.forEach((node) => cardObserver.observe(node));
+}
+
+/**
+ * Garante que o modal exista no DOM.
  */
 function ensureModal() {
   if (modalEl) return;
@@ -138,10 +236,8 @@ function ensureModal() {
 }
 
 /**
- * Abre o modal com os detalhes completos de um projeto.
- * Se o projeto tem .glb E imagens, exibe botões para alternar entre 3D e fotos.
- * @param {Object} project Projeto a exibir.
- * @returns {void}
+ * Abre o modal com os detalhes do projeto.
+ * @param {Object} project
  */
 function openModal(project) {
   ensureModal();
@@ -168,52 +264,40 @@ function openModal(project) {
   const hasImages = project.images && project.images.length > 0;
   const tabbar = el("div", { class: "project-modal-tabbar" });
   let currentMainImg = null;
+  let tab3d = null;
+  let tabImgs = null;
 
-  /**
-   * Ativa o modo 3D no modal.
-   */
   async function show3D() {
     disposeActiveViewer();
     const requestId = viewerRequestId;
     mediaWrap.innerHTML = "";
     galleryWrap.innerHTML = "";
+
     const viewerWrap = el("div", {
       class: "project-media project-media-3d project-media-3d-lg",
       "aria-label": `Modelo 3D de ${project.title}`,
     });
-    viewerWrap.append(
-      el("div", { class: "project-viewer-loading", role: "status" }, [
-        "Carregando modelo 3D...",
-      ]),
-    );
+    viewerWrap.append(createLoading("Carregando modelo 3D..."));
     mediaWrap.append(viewerWrap);
+
     tabbar
       .querySelectorAll("button")
       .forEach((b) => b.classList.remove("active"));
     tab3d?.classList.add("active");
 
-    try {
-      const viewer = await createViewer(viewerWrap, project.model);
-      if (
-        requestId !== viewerRequestId ||
-        !modalEl?.classList.contains("open")
-      ) {
-        viewer.dispose();
-        return;
-      }
-      activeViewer = viewer;
-    } catch (err) {
-      console.error("[projects] falha ao iniciar viewer 3D:", err);
-      viewerWrap.innerHTML = "";
-      viewerWrap.append(
-        el("div", { class: "project-no-image" }, ["Modelo 3D indisponível"]),
-      );
+    const viewer = await createViewer(viewerWrap, project.model, {
+      interactive: true,
+      autoRotate: true,
+      fitScale: 2.5,
+    });
+
+    if (requestId !== viewerRequestId || !modalEl?.classList.contains("open")) {
+      viewer.dispose();
+      return;
     }
+    activeViewer = viewer;
   }
 
-  /**
-   * Ativa o modo de imagens (fotos) no modal.
-   */
   function showImages() {
     disposeActiveViewer();
     mediaWrap.innerHTML = "";
@@ -244,20 +328,18 @@ function openModal(project) {
           }
           galleryWrap
             .querySelectorAll("img")
-            .forEach((n) => n.classList.remove("active"));
+            .forEach((node) => node.classList.remove("active"));
           thumb.classList.add("active");
         });
         galleryWrap.append(thumb);
       });
     }
+
     tabbar
       .querySelectorAll("button")
       .forEach((b) => b.classList.remove("active"));
     tabImgs?.classList.add("active");
   }
-
-  let tab3d = null;
-  let tabImgs = null;
 
   if (hasModel && hasImages) {
     tab3d = el("button", { class: "project-modal-tab", type: "button" }, [
@@ -285,29 +367,27 @@ function openModal(project) {
     tabbar.append(tabImgs);
   }
 
-  const detailSections = buildProjectDetails(project);
-
   modalContent.append(closeBtn, title);
   if (hasModel || hasImages) modalContent.append(tabbar);
-  modalContent.append(mediaWrap, galleryWrap, detailSections);
+  modalContent.append(mediaWrap, galleryWrap, buildProjectDetails(project));
 
-  if (hasImages) {
-    showImages();
-  } else if (hasModel) {
-    show3D();
-  }
-
+  isModalOpen = true;
+  setCardViewersPaused(true);
   modalEl.classList.add("open");
   document.body.style.overflow = "hidden";
+
+  if (hasModel) {
+    show3D();
+  } else if (hasImages) {
+    showImages();
+  }
   closeBtn.focus();
 }
 
 /**
- * Constrói as seções de descrição do modal, separando dado técnico e solução.
- * Mantém fallback para `description` quando o JSON ainda não trouxer campos
- * estruturados.
- * @param {Object} project Projeto a exibir.
- * @returns {HTMLElement} Bloco de detalhes estruturados.
+ * Monta os detalhes estruturados do projeto.
+ * @param {Object} project
+ * @returns {HTMLElement}
  */
 function buildProjectDetails(project) {
   const wrap = el("div", { class: "project-modal-details" });
@@ -321,6 +401,7 @@ function buildProjectDetails(project) {
         ]),
       );
     }
+
     if (project.solves) {
       wrap.append(
         el("section", { class: "project-detail-section" }, [
@@ -338,11 +419,12 @@ function buildProjectDetails(project) {
 
 /**
  * Fecha o modal.
- * @returns {void}
  */
 function closeModal() {
   if (!modalEl) return;
   disposeActiveViewer();
+  isModalOpen = false;
+  setCardViewersPaused(false);
   modalEl.classList.remove("open");
   document.body.style.overflow = "";
   modalContent.innerHTML = "";
@@ -355,16 +437,18 @@ document.addEventListener("keydown", (e) => {
 });
 
 /**
- * Inicializa a seção de projetos: busca o JSON e renderiza os cards.
+ * Inicializa a seção de projetos.
  */
 export async function initProjects() {
   const grid = qs("#projects-grid");
   if (!grid) return;
+
   try {
     const res = await fetch("assets/data/projects.json");
     if (!res.ok) throw new Error("projects.json não encontrado");
     const projects = await res.json();
     grid.append(...projects.map(buildCard));
+    initCardViewers(grid);
   } catch (err) {
     console.error("[projects] falha ao carregar projetos:", err);
     grid.append(

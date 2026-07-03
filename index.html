@@ -1,29 +1,10 @@
 <!doctype html>
-<html lang="pt-BR" data-theme="light">
+<html lang="pt-BR">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <script>
-      (function () {
-        try {
-          var saved = localStorage.getItem("engendrar-theme");
-          if (saved === "light" || saved === "dark") {
-            document.documentElement.setAttribute("data-theme", saved);
-          } else if (
-            window.matchMedia &&
-            window.matchMedia("(prefers-color-scheme: dark)").matches
-          ) {
-            document.documentElement.setAttribute("data-theme", "dark");
-          } else {
-            document.documentElement.setAttribute("data-theme", "light");
-          }
-        } catch (e) {
-          /* localStorage indisponível: mantém padrão light */
-        }
-      })();
-    </script>
 
-    <title>Engendrar — Soluções Mecânicas e Projetos CAD</title>
+    <title>Engendrar — Soluções Mecânicas</title>
     <meta
       name="description"
       content="Engendrar — soluções mecânicas, modelagem CAD e detalhamento técnico para fabricação. Portfólio de projetos de Rhenan Ferreira."
@@ -46,13 +27,6 @@
 
     <link rel="icon" type="image/png" href="assets/imgs/logo/engendrar.png" />
 
-    <link
-      rel="preload"
-      as="image"
-      href="assets/imgs/logo/engendrar.png"
-      fetchpriority="high"
-    />
-
     <!-- CSS -->
     <link rel="stylesheet" href="assets/css/base.css" />
     <link rel="stylesheet" href="assets/css/theme.css" />
@@ -61,7 +35,7 @@
     <link rel="stylesheet" href="assets/css/hero.css" />
     <link rel="stylesheet" href="assets/css/cursor.css" />
 
-    <!-- Preconnect aos CDNs (GSAP + Three.js) — ADR-004 -->
+    <!-- Preconnect aos CDNs (GSAP + Three.js base de conhecimento) -->
     <link rel="preconnect" href="https://esm.run" crossorigin />
     <link rel="preconnect" href="https://unpkg.com" crossorigin />
 
@@ -82,72 +56,129 @@
     <header class="site-header" id="site-header">
       <div class="container header-inner">
         <a class="brand" href="#hero" aria-label="Engendrar — início">
-          <span class="brand-name">Engendrar</span>
+          <span class="brand-copy">
+            <span class="brand-title">Engendrar</span>
+            <span class="brand-subtitle">Soluções Mecânicas</span>
+          </span>
         </a>
 
         <nav class="site-nav" aria-label="Navegação principal">
           <ul>
             <li><a href="#sobre">Sobre</a></li>
+            <li><a href="#servicos">Serviços</a></li>
             <li><a href="#projetos">Projetos</a></li>
             <li><a href="#contato">Contato</a></li>
           </ul>
         </nav>
 
-        <button
-          class="theme-toggle"
-          id="theme-toggle"
-          type="button"
-          aria-pressed="false"
-          aria-label="Alternar tema claro/escuro"
-          title="Alternar tema"
-        >
+        <a class="header-cta" href="#contato">
+          <span>Solicitar orçamento</span>
           <svg
-            class="theme-toggle-icon theme-toggle-icon--sun"
             viewBox="0 0 24 24"
-            width="20"
-            height="20"
+            width="18"
+            height="18"
             aria-hidden="true"
             focusable="false"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
           >
-            <circle cx="12" cy="12" r="4" />
             <path
-              d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"
+              d="M5 12h14M13 5l7 7-7 7"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
             />
           </svg>
-          <svg
-            class="theme-toggle-icon theme-toggle-icon--moon"
-            viewBox="0 0 24 24"
-            width="20"
-            height="20"
-            aria-hidden="true"
-            focusable="false"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
-            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
-          </svg>
-        </button>
+        </a>
       </div>
     </header>
 
     <main id="main">
-      <!-- HERO: cena 3D com tema de engenharia mecânica (Three.js + GSAP) -->
-      <section id="hero" class="hero" aria-label="Apresentação Engendrar">
-        <canvas id="hero-canvas"></canvas>
-        <div class="hero-overlay">
-          <h1 class="hero-title">ENGENDRAR</h1>
-          <p class="hero-subtitle">Soluções Mecânicas</p>
-          <p class="hero-scroll-hint" aria-hidden="true">
-            Role para explorar ↓
-          </p>
+      <section
+        id="hero"
+        class="hero hero-home"
+        aria-label="Apresentação Engendrar"
+      >
+        <div class="hero-bg" aria-hidden="true"></div>
+        <div class="hero-shade" aria-hidden="true"></div>
+        <div class="container hero-shell">
+          <div class="hero-copy">
+            <span class="hero-kicker">Engendrar Soluções Mecânicas</span>
+            <h1 class="hero-title">
+              Projetos mecânicos que movimentam
+              <span>resultados.</span>
+            </h1>
+            <p class="hero-subtitle">
+              Desenvolvimento de soluções mecânicas sob medida para a indústria,
+              com foco em eficiência, segurança e inovação.
+            </p>
+          </div>
+          <div class="hero-benefits" aria-label="Diferenciais da Engendrar">
+            <article class="hero-benefit">
+              <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path
+                  d="M12 3l7 3v5c0 4.4-3 8.4-7 10-4-1.6-7-5.6-7-10V6zM9 12l2 2 4-4"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.8"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+              <div>
+                <h2>Soluções personalizadas</h2>
+                <p>Projetos sob medida para cada necessidade</p>
+              </div>
+            </article>
+            <article class="hero-benefit">
+              <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path
+                  d="M12 3l7 3v5c0 4.4-3 8.4-7 10-4-1.6-7-5.6-7-10V6zM9 12l2 2 4-4"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.8"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+              <div>
+                <h2>Segurança e conformidade</h2>
+                <p>Projetos seguindo normas técnicas e NR12</p>
+              </div>
+            </article>
+            <article class="hero-benefit">
+              <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path
+                  d="M12 8.5A3.5 3.5 0 1 0 12 15.5A3.5 3.5 0 1 0 12 8.5zM19.4 15a1.6 1.6 0 0 0 .32 1.77l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.6 1.6 0 0 0-1.77-.32 1.6 1.6 0 0 0-1 1.47V21a2 2 0 1 1-4 0v-.09a1.6 1.6 0 0 0-1-1.47 1.6 1.6 0 0 0-1.77.32l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.6 1.6 0 0 0 .32-1.77 1.6 1.6 0 0 0-1.47-1H3a2 2 0 1 1 0-4h.09a1.6 1.6 0 0 0 1.47-1 1.6 1.6 0 0 0-.32-1.77l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.6 1.6 0 0 0 1.77.32h.01a1.6 1.6 0 0 0 1-1.47V3a2 2 0 1 1 4 0v.09a1.6 1.6 0 0 0 1 1.47h.01a1.6 1.6 0 0 0 1.77-.32l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.6 1.6 0 0 0-.32 1.77v.01a1.6 1.6 0 0 0 1.47 1H21a2 2 0 1 1 0 4h-.09a1.6 1.6 0 0 0-1.47 1z"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+              <div>
+                <h2>Do projeto à fabricação</h2>
+                <p>Acompanhamento completo em todas as etapas</p>
+              </div>
+            </article>
+            <article class="hero-benefit">
+              <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path
+                  d="M9 18h6M10 22h4M12 2a6.5 6.5 0 0 0-4 11.63c.62.47 1 1.21 1 2V16h6v-.37c0-.79.38-1.53 1-2A6.5 6.5 0 0 0 12 2z"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.8"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+              <div>
+                <h2>Inovação e eficiência</h2>
+                <p>Soluções inteligentes que geram resultados reais</p>
+              </div>
+            </article>
+          </div>
         </div>
       </section>
 
@@ -179,6 +210,50 @@
               Nosso foco é desenvolver projetos funcionais, fabricáveis e
               alinhados às necessidades reais da operação industrial.
             </p>
+          </div>
+        </div>
+      </section>
+
+      <section
+        id="servicos"
+        class="section services"
+        aria-labelledby="servicos-title"
+        data-reveal
+      >
+        <div class="container">
+          <div class="section-heading">
+            <span class="section-eyebrow">Atuação</span>
+            <h2 id="servicos-title" class="section-title">
+              Serviços que conectam engenharia, operação e fabricação
+            </h2>
+            <p class="section-intro">
+              Projetos pensados para a realidade da indústria, com clareza
+              técnica, segurança operacional e foco em viabilidade de
+              fabricação.
+            </p>
+          </div>
+          <div class="services-grid">
+            <article class="service-card">
+              <h3>Projetos mecânicos para fabricação</h3>
+              <p>
+                Desenvolvimento de conjuntos, dispositivos, estruturas e
+                soluções sob medida para operação industrial.
+              </p>
+            </article>
+            <article class="service-card">
+              <h3>Modelagem CAD e detalhamento técnico</h3>
+              <p>
+                Modelos 3D, documentação e detalhamento com foco em clareza
+                produtiva e compatibilidade de montagem.
+              </p>
+            </article>
+            <article class="service-card">
+              <h3>Estruturas, implementos e suportes</h3>
+              <p>
+                Projetos robustos orientados a resistência, repetibilidade e
+                integração com a rotina de fábrica.
+              </p>
+            </article>
           </div>
         </div>
       </section>

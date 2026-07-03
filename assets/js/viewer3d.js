@@ -1,20 +1,24 @@
 /**
  * @file viewer3d.js
- * @summary Renderiza um modelo .glb em um <canvas> usando Three.js.
- *          Usa import map definido no index.html (bare specifiers 'three' e 'three/addons/').
- *          Honra prefers-reduced-motion (sem auto-rotação).
+ * @summary Renderiza um modelo .glb em um container usando Three.js.
+ *          Suporta modo interativo (modal) e modo passivo (cards da grade).
  */
 
 /**
  * Cria e inicializa um visualizador 3D para um modelo .glb.
- * @param {HTMLElement} container Elemento contêiner onde o canvas será anexado.
- * @param {string} modelUrl URL do arquivo .glb a carregar.
+ * @param {HTMLElement} container Elemento onde o canvas será anexado.
+ * @param {string} modelUrl URL do arquivo .glb.
+ * @param {{ interactive?: boolean, autoRotate?: boolean, fitScale?: number }} [options]
  * @returns {Promise<{dispose: Function, pause: Function, resume: Function}>}
  */
-export async function initViewer3D(container, modelUrl) {
+export async function initViewer3D(container, modelUrl, options = {}) {
   const reduceMotion = window.matchMedia(
     "(prefers-reduced-motion: reduce)",
   ).matches;
+  const interactive = options.interactive !== false;
+  const autoRotate =
+    options.autoRotate === undefined ? !reduceMotion : options.autoRotate;
+  const fitScale = options.fitScale || 2.5;
 
   let THREE, GLTFLoader, OrbitControls, DRACOLoader;
   try {
@@ -42,17 +46,18 @@ export async function initViewer3D(container, modelUrl) {
   scene.background = null;
 
   const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 100);
-  camera.position.set(0, 0, 5);
+  camera.position.set(0, 0.15, 5.2);
 
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
   const isCoarsePointer = window.matchMedia("(pointer: coarse)").matches;
   const pixelRatioCap = isCoarsePointer ? 1.25 : 1.75;
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, pixelRatioCap));
   renderer.setSize(width, height);
+  renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.domElement.style.width = "100%";
   renderer.domElement.style.height = "100%";
+  renderer.domElement.style.pointerEvents = interactive ? "auto" : "none";
   container.appendChild(renderer.domElement);
-  container.querySelector(".project-viewer-loading")?.remove();
 
   const hemi = new THREE.HemisphereLight(0xffffff, 0x444466, 2.2);
   scene.add(hemi);
@@ -61,69 +66,25 @@ export async function initViewer3D(container, modelUrl) {
   dir1.position.set(2, 3, 4);
   scene.add(dir1);
 
-  const dir2 = new THREE.DirectionalLight(0x8899ff, 1.0);
+  const dir2 = new THREE.DirectionalLight(0x8899ff, 1);
   dir2.position.set(-3, -1, -2);
   scene.add(dir2);
 
   const controls = new OrbitControls(camera, renderer.domElement);
   controls.enableDamping = true;
   controls.dampingFactor = 0.08;
-  controls.autoRotate = !reduceMotion;
-  controls.autoRotateSpeed = 1.5;
+  controls.autoRotate = autoRotate;
+  controls.autoRotateSpeed = interactive ? 1.5 : 1.1;
   controls.enablePan = false;
+  controls.enableRotate = interactive;
+  controls.enableZoom = interactive;
   controls.minDistance = 2;
   controls.maxDistance = 10;
 
   const loader = new GLTFLoader();
-  if (DRACOLoader) {
-    const dracoLoader = new DRACOLoader();
-    dracoLoader.setDecoderPath("https://www.gstatic.com/draco/v1/decoders/");
-    loader.setDRACOLoader(dracoLoader);
-  }
-  loader.load(
-    modelUrl,
-    (gltf) => {
-      if (disposed) {
-        disposeObject(gltf.scene);
-        return;
-      }
-      const model = gltf.scene;
-      const box = new THREE.Box3().setFromObject(model);
-      const size = box.getSize(new THREE.Vector3());
-      const center = box.getCenter(new THREE.Vector3());
-      const maxDim = Math.max(size.x, size.y, size.z) || 1;
-      const scale = 2.5 / maxDim;
-      model.scale.setScalar(scale);
-      model.position.sub(center.multiplyScalar(scale));
-      scene.add(model);
-    },
-    (progress) => {
-      if (progress.total) {
-        const pct = Math.round((progress.loaded / progress.total) * 100);
-        const loading = container.querySelector(".project-viewer-loading");
-        if (loading) {
-          loading.textContent = `Carregando modelo 3D... ${pct}%`;
-        }
-      }
-    },
-    (err) => {
-      if (disposed) return;
-      console.error("[viewer3d] Falha ao carregar modelo .glb:", err);
-      showFallback(container);
-    },
-  );
-
-  /**
-   * Anima o loop de renderização.
-   * @returns {void}
-   */
-  function animate() {
-    rafId = requestAnimationFrame(animate);
-    if (disposed || !isVisible) return;
-    controls.update();
-    renderer.render(scene, camera);
-  }
-  animate();
+  const dracoLoader = new DRACOLoader();
+  dracoLoader.setDecoderPath("https://www.gstatic.com/draco/v1/decoders/");
+  loader.setDRACOLoader(dracoLoader);
 
   const ro = new ResizeObserver(() => {
     const w = container.clientWidth || width;
@@ -142,6 +103,38 @@ export async function initViewer3D(container, modelUrl) {
   );
   io.observe(container);
 
+  function animate() {
+    rafId = requestAnimationFrame(animate);
+    if (disposed || !isVisible) return;
+    controls.update();
+    renderer.render(scene, camera);
+  }
+  animate();
+
+  const viewer = {
+    dispose,
+    pause,
+    resume,
+  };
+
+  try {
+    const model = await loadModel(loader, THREE, modelUrl, fitScale, container);
+    if (disposed) {
+      disposeObject(model);
+      return viewer;
+    }
+    scene.add(model);
+    clearLoading(container);
+    return viewer;
+  } catch (err) {
+    if (!disposed) {
+      console.error("[viewer3d] Falha ao carregar modelo .glb:", err);
+      showFallback(container);
+    }
+    dispose();
+    return createNoopViewer();
+  }
+
   function pause() {
     isVisible = false;
   }
@@ -150,10 +143,6 @@ export async function initViewer3D(container, modelUrl) {
     isVisible = true;
   }
 
-  /**
-   * Disposes of the viewer and its resources.
-   * @returns {void}
-   */
   function dispose() {
     if (disposed) return;
     disposed = true;
@@ -161,20 +150,76 @@ export async function initViewer3D(container, modelUrl) {
     ro.disconnect();
     io.disconnect();
     controls.dispose();
+    dracoLoader.dispose();
     disposeObject(scene);
     renderer.dispose();
     renderer.forceContextLoss();
     renderer.domElement.remove();
   }
+}
 
-  return { dispose, pause, resume };
+/**
+ * Carrega o modelo GLB, centraliza e ajusta escala.
+ * @param {*} loader
+ * @param {*} THREE
+ * @param {string} modelUrl
+ * @param {number} fitScale
+ * @param {HTMLElement} container
+ * @returns {Promise<any>}
+ */
+function loadModel(loader, THREE, modelUrl, fitScale, container) {
+  return new Promise((resolve, reject) => {
+    loader.load(
+      modelUrl,
+      (gltf) => {
+        const model = gltf.scene;
+        const box = new THREE.Box3().setFromObject(model);
+        const size = box.getSize(new THREE.Vector3());
+        const center = box.getCenter(new THREE.Vector3());
+        const maxDim = Math.max(size.x, size.y, size.z) || 1;
+        const scale = fitScale / maxDim;
+        model.scale.setScalar(scale);
+        model.position.sub(center.multiplyScalar(scale));
+        resolve(model);
+      },
+      (progress) => {
+        if (progress.total) {
+          const pct = Math.round((progress.loaded / progress.total) * 100);
+          updateLoadingText(container, `Carregando modelo 3D... ${pct}%`);
+        }
+      },
+      reject,
+    );
+  });
+}
+
+/**
+ * Atualiza o texto do loading, se existir.
+ * @param {HTMLElement} container
+ * @param {string} text
+ */
+function updateLoadingText(container, text) {
+  const loading = container.querySelector(".project-loading__text");
+  if (loading) loading.textContent = text;
+  const fallback = container.querySelector(".project-viewer-loading");
+  if (fallback) fallback.textContent = text;
+}
+
+/**
+ * Remove o loading overlay do container.
+ * @param {HTMLElement} container
+ */
+function clearLoading(container) {
+  container.querySelector(".project-loading")?.remove();
+  container.querySelector(".project-viewer-loading")?.remove();
 }
 
 /**
  * Exibe um fallback quando o 3D não está disponível.
- * @param {HTMLElement} container Contêiner a preencher.
+ * @param {HTMLElement} container
  */
 function showFallback(container) {
+  clearLoading(container);
   container.innerHTML = "";
   const text = document.createElement("div");
   text.className = "project-no-image";
@@ -183,8 +228,8 @@ function showFallback(container) {
 }
 
 /**
- * Cria um visualizador 3D que não faz nada (noop).
- * @returns {void}
+ * Retorna um viewer no-op.
+ * @returns {{dispose: Function, pause: Function, resume: Function}}
  */
 function createNoopViewer() {
   return {
@@ -195,8 +240,8 @@ function createNoopViewer() {
 }
 
 /**
- * Disposes of a 3D object and its children.
- * @param {THREE.Object3D} object The object to dispose.
+ * Faz dispose recursivo de geometrias, materiais e texturas.
+ * @param {any} object
  */
 function disposeObject(object) {
   object.traverse((child) => {

@@ -3,8 +3,6 @@
  * @summary Bootstrap ESM: inicializa todos os módulos da página. (Sprint 1)
  */
 
-import { initTheme } from "./theme.js";
-import { initHero } from "./hero.js";
 import { initProjects } from "./projects.js";
 import { initForm } from "./form.js";
 import { initScrollReveal } from "./scroll-reveal.js";
@@ -12,11 +10,8 @@ import { initCursor } from "./cursor.js";
 
 updateFooterYear();
 
-initTheme();
 initForm();
 
-// Postergamos módulos visuais para `load` para evitar leitura forçada de
-// layout antes de todos os estilos/assets estarem carregados.
 if (document.readyState === "complete") {
   initVisualModules();
 } else {
@@ -24,7 +19,6 @@ if (document.readyState === "complete") {
 }
 
 function initVisualModules() {
-  initHero();
   initProjects();
   initScrollReveal();
   initCursor();

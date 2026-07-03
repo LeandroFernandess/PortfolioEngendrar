@@ -1,6 +1,10 @@
 # Dependencies
 node_modules/
 
+# OS / editor
+.DS_Store
+*.log
+
 # Environment
 .env
 
@@ -13,6 +17,14 @@ node_modules/
 # Temporary
 INSTRUCTIONS.md
 opencode.jsonc
-docs/
 .ai/
 AGENTS.md
+
+# Local backups / reference assets not required in runtime
+assets/imgs/glb/_original/
+assets/imgs/logo/LogoEngendrar.png
+assets/imgs/logo/TemplateReferencia.png
+assets/imgs/logo/engendrar-original.png
+
+# Documentation
+docs/
